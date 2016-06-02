@@ -2,10 +2,12 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-np.random.seed(1337)  # for reproducibility
+import csv
+
 
 #variables to help with deleting of model
 this = sys.modules[__name__]
+testData = []
 c = dir()
 c.append('c')
 c.append('i')
@@ -16,16 +18,19 @@ c.append('neurons')
 layers = 2 #Change to for loop
 neurons = 100 #Change to for loop
 
-for i in range(2):
+for i in range(3):
     for n in dir():
         if n[0]!='_' and (not n in c):
             print "Deleting ", n
             delattr(this, n)
-
+    np.random.seed(1337)  # for reproducibility, must be reset with each generation of network
+                          # network or the results will differ slightly
     from keras.datasets import mnist
-    from keras.models import Sequential
+    from keras.models import Model, Sequential
     from keras.layers.core import Dense, Dropout, Activation
     from keras.layers import advanced_activations
+    from keras.layers import Convolution2D, MaxPooling2D, Flatten
+    from keras.layers import Input, LSTM, Embedding, merge
     from keras.optimizers import SGD, Adam, RMSprop
     from keras.utils import np_utils
 
@@ -66,16 +71,18 @@ for i in range(2):
     Y_test = np_utils.to_categorical(y_test, nb_classes)
 
     # construct the network
+
+    # construct the network
     model = Sequential()
-    model.add(Dense(100, input_shape=(im_width*im_height,)))
+    model.add(Dense(10**(i+1), input_shape=(im_width*im_height,)))
     model.add(Activation('relu'))
     model.add(Dropout(0.2))
-    for j in range(layers):
-        model.add(Dense(neurons))
-        model.add(Activation('relu'))
-        model.add(Dropout(0.2))
+    model.add(Dense(10**(i+1)))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
+
     model.summary()
 
     model.compile(loss='categorical_crossentropy',
@@ -84,6 +91,12 @@ for i in range(2):
 
     batch_size = 1024
     nb_epoch = 1
+    testData.append(['Epoch number'])
+    testData.append(['Loss'])
+    testData.append(['Test accuracy'])
+    testData.append(['Epoch time'])
+    print testData
+    csvName = "testResults"+str(i)+".csv"
     for k in range(15):
         start = time.time()
         history = model.fit(X_train, Y_train,
@@ -94,6 +107,16 @@ for i in range(2):
         score = model.evaluate(X_test, Y_test, verbose=0)
 
         print 'Epoch number: ', k
-        print 'Test score:   ', score[0]
+        print 'Loss:   ', score[0]
         print 'Test accuracy:', score[1]
         print 'Time elapsed: ',(end - start), "seconds"
+
+        testData[0+(i*4)].append(k)
+        testData[1+(i*4)].append(score[0])
+        testData[2+(i*4)].append(score[1])
+        testData[3+(i*4)].append(end - start)
+
+
+    with open(csvName, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerows(testData)
