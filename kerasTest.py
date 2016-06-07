@@ -18,12 +18,12 @@ c.append('neurons')
 layers = 2 #Change to for loop
 neurons = 100 #Change to for loop
 
-for i in range(3):
+for i in range(1):
     for n in dir():
         if n[0]!='_' and (not n in c):
             print "Deleting ", n
             delattr(this, n)
-    np.random.seed(1337)  # for reproducibility, must be reset with each generation of network
+    #np.random.seed(1337)  # for reproducibility, must be reset with each generation of network
                           # network or the results will differ slightly
     from keras.datasets import mnist
     from keras.models import Model, Sequential
@@ -41,10 +41,17 @@ for i in range(3):
     if not 'X_train' in c:
         a = dir()
         (X_train, y_train), (X_test, y_test) = mnist.load_data()
+        X_train = X_train[:600][:][:]
+        y_train = y_train[:600][:][:]
         num_train = X_train.shape[0]
         num_test = X_test.shape[0]
         im_width  = X_train.shape[1]
         im_height = X_train.shape[2]
+        print 'num_train: ', num_train
+        print 'num_test: ', num_test
+        print 'X_train Shape: ', X_train.shape
+
+
 
         # change type to float
         X_train = X_train.astype('float32')
@@ -74,12 +81,12 @@ for i in range(3):
 
     # construct the network
     model = Sequential()
-    model.add(Dense(10**(i+1), input_shape=(im_width*im_height,)))
+    model.add(Dense(700, input_shape=(im_width*im_height,)))
     model.add(Activation('relu'))
-    model.add(Dropout(0.2))
-    model.add(Dense(10**(i+1)))
+    # model.add(Dropout(0.05))
+    model.add(Dense(700))
     model.add(Activation('relu'))
-    model.add(Dropout(0.2))
+    # model.add(Dropout(0.05))
     model.add(Dense(nb_classes))
     model.add(Activation('softmax'))
 
@@ -89,7 +96,7 @@ for i in range(3):
                   optimizer=RMSprop(),
                   metrics=['accuracy'])
 
-    batch_size = 1024
+    batch_size = 100
     nb_epoch = 1
     testData.append(['Epoch number'])
     testData.append(['Loss'])
@@ -107,9 +114,9 @@ for i in range(3):
         score = model.evaluate(X_test, Y_test, verbose=0)
 
         print 'Epoch number: ', k
-        print 'Loss:   ', score[0]
+        #print 'Loss:   ', score[0]
         print 'Test accuracy:', score[1]
-        print 'Time elapsed: ',(end - start), "seconds"
+        #print 'Time elapsed: ',(end - start), "seconds"
 
         testData[0+(i*4)].append(k)
         testData[1+(i*4)].append(score[0])
